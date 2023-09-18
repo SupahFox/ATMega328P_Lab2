@@ -6,53 +6,60 @@
 ;
 
 ;
-; Ejemplo_Interrupción_Timer0.asm
+; Ejemplo_Interrupciï¿½n_Timer0.asm
 ;
 ; Created: 12/9/2021 22:00:38
 ; Author : curso de microprocesadores
 ;
 
+PCINT10
 
-
-; Empiezo con los vectores de interrupción
+; Empiezo con los vectores de interrupciï¿½n
 .ORG 0x0000
-	jmp		start		; dirección de comienzo (vector de reset)  
+	jmp		start		;direcciï¿½n de comienzo (vector de reset)
+.org	0x0008 
+	jmp		interrupcion_externa 
 .ORG 0x001C 
-	jmp		_tmr0_int	; salto atención a rutina de comparación A del timer 0
+	jmp		_tmr0_int	;salto atenciï¿½n a rutina de comparaciï¿½n A del timer 0
 
 
 ; ---------------------------------------------------------------------------------------
-; acá empieza el programa
+; acï¿½ empieza el programa
 start:
-; configuro los puertos:
+;configuro los puertos:
 ;	PB2 PB3 PB4 PB5	- son los LEDs del shield
     ldi		r16,	0b00111101	
-	out		DDRB,	r16			; 4 LEDs del shield son salidas
-	out		PORTB,	r16			; apago los LEDs
+	out		DDRB,	r16			;4 LEDs del shield son salidas
+	out		PORTB,	r16			;apago los LEDs
 
 	ldi		r16,	0b00000000	
-	out		DDRC,	r16			; 3 botones del shield son entradas
-; -------------------------------------------------------------------------------------
+	out		DDRC,	r16			;3 botones del shield son entradas
+;-------------------------------------------------------------------------------------
 
-; Configuro el TMR0 y su interrupcion.
+;Configuro el TMR0 y su interrupcion.
 	ldi		r16,	0b00000010	
-	out		TCCR0A,	r16			; configuro para que cuente hasta OCR0A y vuelve a cero (reset on compare), ahí dispara la interrupción
+	out		TCCR0A,	r16			;configuro para que cuente hasta OCR0A y vuelve a cero (reset on compare), ahï¿½ dispara la interrupciï¿½n
 	ldi		r16,	0b00000101	
-	out		TCCR0B,	r16			; prescaler = 1024
+	out		TCCR0B,	r16			;prescaler = 1024
 	ldi		r16,	124	
-	out		OCR0A,	r16			; comparo con 125
+	out		OCR0A,	r16			;comparo con 124
 	ldi		r16,	0b00000010	
-	sts		TIMSK0,	r16			; habilito la interrupción (falta habilitar global)
-; -------------------------------------------------------------------------------------
-; Inicializo algunos registros que voy a usar como variables.
-	ldi		r24,	0x00		; inicializo r24 para un contador genérico
-; -------------------------------------------------------------------------------------
+	sts		TIMSK0,	r16			;habilito la interrupciï¿½n (falta habilitar global)
+;-------------------------------------------------------------------------------------
+;Inicializo algunos registros que voy a usar como variables.
+	ldi		r24,	0x00		;inicializo r24 para un contador genï¿½rico
+;-------------------------------------------------------------------------------------
+ldi		r16, 0b00000010
+sts		PCICR,r16
+ldi		r16, 0b00000100
+sts		PCMSK1,r16
 
 
-; Programa principal ... acá puedo hacer lo que quiero
+
+;Programa principal ... acï¿½ puedo hacer lo que quiero
 
 comienzo:
-	sei							; habilito las interrupciones globales(set interrupt flag)
+	sei							;habilito las interrupciones globales(set interrupt flag)
 
 loop1:
 	nop
@@ -63,7 +70,7 @@ loop1:
 	nop
 	nop
 	nop
-	brne	loop1
+	brne	loop1  //branch not equal 0 la zero flag es 0 salta si la operacion anterior da cero por ende va a loop 2
 loop2:
 	nop
 	nop
@@ -71,21 +78,44 @@ loop2:
 fin:
 	rjmp loop2
 
-; RUTINAS
-; -------------------------------------------------------------------------------------
+;RUTINAS
+;-------------------------------------------------------------------------------------
 
 ; ------------------------------------------------
-; Rutina de atención a la interrupción del Timer0.
+; Rutina de atenciï¿½n a la interrupciï¿½n del Timer0.
 ; ------------------------------------------------
 ; recordar que el timer 0 fue configurado para interrumpir cada 125 ciclos (5^3), y tiene un prescaler 1024 = 2^10.
-; El reloj de I/O está configurado @ Fclk = 16.000.000 Hz = 2^10*5^6; entonces voy a interrumpir 125 veces por segundo
+; El reloj de I/O estï¿½ configurado @ Fclk = 16.000.000 Hz = 2^10*5^6; entonces voy a interrumpir 125 veces por segundo
 ; esto sale de dividir Fclk por el prescaler y el valor de OCR0A.
 ; 
 ; Esta rutina por ahora no hace casi nada, Ud puede ir agregando funcionalidades.
 ; Por ahora solo: cambia el valor de un LED en la placa, e incrementa un contador en r24.
 
-_tmr0_int:			
-		sbi		PINB,	2			;toggle LED
-		inc		r24					;cuento cuántas veces entré en la rutina.
+_tmr0_int:
+		in	    r17,SREG 			
+		inc		r24	
+		cpi		r24,125
+		breq	cambio_led	
+		rjmp	_tmr0_out
+
+cambio_led:	
+			sbi		PINB,	2			;cambio LED
+
 _tmr0_out:
-	    reti						;retorno de la rutina de interrupción del Timer0
+		out		SREG,r17
+			   
+	    reti						;retorno de la rutina de interrupciï¿½n del Timer0
+
+
+
+
+interrupcion_externa:
+					
+					in	    r17,SREG 
+								
+					sbi		PINB, 5	
+												;toggle LED camvia de estado D1
+					inc		r24					;cuento cuï¿½ntas veces entrï¿½ en la rutina.
+
+					out		SREG,r17
+					reti		
