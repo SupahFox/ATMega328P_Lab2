@@ -6,25 +6,23 @@
 ;
 
 ;
-; Ejemplo_Interrupci�n_Timer0.asm
+; Ejemplo_Interrupcion_Timer0.asm
 ;
 ; Created: 12/9/2021 22:00:38
 ; Author : curso de microprocesadores
 ;
 
-PCINT10
-
-; Empiezo con los vectores de interrupci�n
+; Empiezo con los vectores de interrupción
 .ORG 0x0000
-	jmp		start		;direcci�n de comienzo (vector de reset)
+	jmp		start		;dirección de comienzo (vector de reset)
 .org	0x0008 
 	jmp		interrupcion_externa 
 .ORG 0x001C 
-	jmp		_tmr0_int	;salto atenci�n a rutina de comparaci�n A del timer 0
+	jmp		_tmr0_int	;salto atención a rutina de comparación A del timer 0
 
 
 ; ---------------------------------------------------------------------------------------
-; ac� empieza el programa
+; acá empieza el programa
 start:
 ;configuro los puertos:
 ;	PB2 PB3 PB4 PB5	- son los LEDs del shield
@@ -38,16 +36,16 @@ start:
 
 ;Configuro el TMR0 y su interrupcion.
 	ldi		r16,	0b00000010	
-	out		TCCR0A,	r16			;configuro para que cuente hasta OCR0A y vuelve a cero (reset on compare), ah� dispara la interrupci�n
+	out		TCCR0A,	r16			;configuro para que cuente hasta OCR0A y vuelve a cero (reset on compare), ahí dispara la interrupción
 	ldi		r16,	0b00000101	
 	out		TCCR0B,	r16			;prescaler = 1024
 	ldi		r16,	124	
 	out		OCR0A,	r16			;comparo con 124
 	ldi		r16,	0b00000010	
-	sts		TIMSK0,	r16			;habilito la interrupci�n (falta habilitar global)
+	sts		TIMSK0,	r16			;habilito la interrupción (falta habilitar global)
 ;-------------------------------------------------------------------------------------
 ;Inicializo algunos registros que voy a usar como variables.
-	ldi		r24,	0x00		;inicializo r24 para un contador gen�rico
+	ldi		r24,	0x00		;inicializo r24 para un contador genérico
 ;-------------------------------------------------------------------------------------
 ldi		r16, 0b00000010
 sts		PCICR,r16
@@ -56,7 +54,7 @@ sts		PCMSK1,r16
 
 
 
-;Programa principal ... ac� puedo hacer lo que quiero
+;Programa principal ... acá puedo hacer lo que quiero
 
 comienzo:
 	sei							;habilito las interrupciones globales(set interrupt flag)
@@ -82,40 +80,33 @@ fin:
 ;-------------------------------------------------------------------------------------
 
 ; ------------------------------------------------
-; Rutina de atenci�n a la interrupci�n del Timer0.
+; Rutina de atención a la interrupción del Timer0.
 ; ------------------------------------------------
 ; recordar que el timer 0 fue configurado para interrumpir cada 125 ciclos (5^3), y tiene un prescaler 1024 = 2^10.
-; El reloj de I/O est� configurado @ Fclk = 16.000.000 Hz = 2^10*5^6; entonces voy a interrumpir 125 veces por segundo
+; El reloj de I/O está configurado @ Fclk = 16.000.000 Hz = 2^10*5^6; entonces voy a interrumpir 125 veces por segundo
 ; esto sale de dividir Fclk por el prescaler y el valor de OCR0A.
 ; 
 ; Esta rutina por ahora no hace casi nada, Ud puede ir agregando funcionalidades.
 ; Por ahora solo: cambia el valor de un LED en la placa, e incrementa un contador en r24.
 
 _tmr0_int:
-		in	    r17,SREG 			
-		inc		r24	
-		cpi		r24,125
-		breq	cambio_led	
-		rjmp	_tmr0_out
+	in	    r17,SREG 			
+	inc		r24	
+	cpi		r24,125
+	breq	cambio_led	
+	rjmp	_tmr0_out
 
 cambio_led:	
-			sbi		PINB,	2			;cambio LED
+	sbi PINB, 2			;cambio LED
 
 _tmr0_out:
-		out		SREG,r17
-			   
-	    reti						;retorno de la rutina de interrupci�n del Timer0
+	out		SREG,r17	   
+	reti						;retorno de la rutina de interrupción del Timer0
 
-
-
-
-interrupcion_externa:
-					
-					in	    r17,SREG 
-								
-					sbi		PINB, 5	
-												;toggle LED camvia de estado D1
-					inc		r24					;cuento cu�ntas veces entr� en la rutina.
-
-					out		SREG,r17
-					reti		
+interrupcion_externa:			
+	in	    r17,SREG 
+	sbi		PINB, 5	
+						;toggle LED camvia de estado D1
+	inc		r24			;cuento cuántas veces entré en la rutina.
+	out		SREG,r17
+	reti
