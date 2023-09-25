@@ -26,12 +26,12 @@
 start:
 ;configuro los puertos:
 ;	PB2 PB3 PB4 PB5	- son los LEDs del shield
-    ldi	r16,	0b00111101	;edefino los led que voy a usar
-	out	DDRB,	r16			;los defino como salida
-	out	PORTB,	r16			;apago los LEDs
+    ldi	r16,	0b00111101	; defino los led que voy a usar
+	out	DDRB,	r16			; los defino como salida
+	out	PORTB,	r16			; apago los LEDs
 
 	ldi	r16,	0b00000000	
-	out	DDRC,	r16			;3 botones del shield son entradas
+	out	DDRC,	r16			; 3 botones del shield son entradas
 ;-------------------------------------------------------------------------------------
 
 ;Configuro el TMR0 y su interrupcion.
@@ -49,6 +49,7 @@ start:
 	ldi	r18,	0;mi registro de incrementos
 	ldi	r19,	0;el registro del segundo bit
 	ldi	r20,	0;el registro del tercer bit
+
 ;-------------------------------------------------------------------------------------
 	ldi	r16, 0b00000010
 	sts	PCICR,r16; habilito la interrupcion
